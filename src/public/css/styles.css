@@ -1,0 +1,58 @@
+body {
+  background-color: #f8f9fa; /* Color de fondo gris claro */
+}
+
+.container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+
+.nav-tabs {
+  background-color: #ffffff;
+  border-bottom: 1px solid #dee2e6
+}
+
+/* Estilo para pestañas inactivas */
+.nav-tabs .nav-link {
+  color: #000000;
+}
+
+/* Estilo para pestaña activa */
+.nav-tabs .nav-link.active {
+  color: #ffffff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.tab-content {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 20px;
+  min-height: 200px;
+}
+
+.card-product {
+  margin-bottom: 20px;
+}
+.btn-delete-product {
+  margin-top: 10px;
+}
+.custom-img {
+  width: 100%; /* Asegura que la imagen ocupe todo el ancho del contenedor */
+  height: 100%; /* Asegura que la imagen ocupe todo el alto del contenedor */
+  object-fit: cover; /* Ajusta la imagen para cubrir el contenedor manteniendo la relación de aspecto */
+}
+.card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-product:hover {
+  border: 1px solid #ccc;
+  transition: border 0.3s ease;
+}
