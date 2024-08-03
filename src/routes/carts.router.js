@@ -1,5 +1,5 @@
 import express from "express";
-import CartManager from "../controllers/cart-manager.js";
+import CartManager from "../dao/db/carts-manager-db.js";
 
 const router = express.Router();
 const cartManager = new CartManager("./src/models/carts.json");
@@ -7,36 +7,39 @@ const cartManager = new CartManager("./src/models/carts.json");
 // FUNCION PARA CREAR UN CARRITO
 const addCart = async (req, res) => {
   try {
-    const { status, message, error, cart, totalCarts } =
-      await cartManager.addCart();
-    res.status(status).json({
+    const cardData = req.body || {};
+    const { status, message, error, data } = await cartManager.addCart(
+      cardData
+    );
+    const { createdCart, totalCarts } = data;
+    return res.json({
+      status,
       message,
       error,
-      cart,
+      createdCart,
       totalCarts,
     });
-  } catch (e) {
-    console.error("Error al crear un nuevo carrito", e);
-    res.status(500).json({ error: "Error interno del servidor" });
+  } catch (error) {
+    console.error("Cart Creation Failed", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 // FUNCION PARA OBTENER LOS PRODUCTOS DE UN CARRITO
 const getProductsInCart = async (req, res) => {
   try {
     const id = req.params.cartId;
-    const cart = await cartManager.getCartById(id);
-    if (!cart) {
-      return res.json({
-        error: "No se encontró el carrito consultado",
-      });
-    } else {
-      const products = [...cart.products];
-      res.json(products);
-    }
-  } catch (e) {
-    console.error("Error al obtener producto:", e);
+    const { status, message, error, data } = await cartManager.getCartById(id);
+    const { cart } = data;
+    return res.json({
+      status,
+      message,
+      error,
+      products: cart?.products || [],
+    });
+  } catch (error) {
+    console.error(`Failed to check cart`, error);
     res.status(500).json({
-      error: `Error interno del servidor`,
+      error: `Internal Server Error`,
     });
   }
 };
@@ -57,7 +60,7 @@ const setProductInCart = async (req, res) => {
   } catch (e) {
     console.error("Error al actualizar carrito:", e);
     res.status(500).json({
-      error: `Error interno del servidor`,
+      error: `Internal Server Error`,
     });
   }
 };
@@ -73,7 +76,7 @@ const deleteCart = async (req, res) => {
   } catch (e) {
     console.error("Error al eliminar carrito:", e);
     res.status(500).json({
-      error: `Error interno del servidor`,
+      error: `Internal Server Error`,
     });
   }
 };

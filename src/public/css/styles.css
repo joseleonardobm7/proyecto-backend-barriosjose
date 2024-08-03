@@ -56,3 +56,19 @@ body {
   border: 1px solid #ccc;
   transition: border 0.3s ease;
 }
+.btn-icon-small {
+  padding: 0.1rem 0.2rem;
+  font-size: 0.8rem;
+  width: auto;
+  height: auto;
+  border-radius: 1rem;
+  background-color: white; 
+  color: red;
+}
+.card-cart{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+}

@@ -1,16 +1,24 @@
 import express from "express";
 import multer from "multer";
 import exphbs from "express-handlebars";
+import dotenv from "dotenv";
+import "./database.js";
 import { Server } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 import productsRouter from "./routes/products.router.js";
 import cartsRouter from "./routes/carts.router.js";
 import viewsRouter from "./routes/views.router.js";
-import ProductManager from "./controllers/product-manager.js";
+import ProductManager from "./dao/db/products-manager-db.js";
+import CardManager from "./dao/db/carts-manager-db.js";
+const productManager = new ProductManager();
+const cartManager = new CardManager();
+
+// OBTENIENDO VARIABLES DE ENTORNO
+dotenv.config();
 
 // INICIALIZANDO EXPRESS Y DEFINIENDO PUERTO A UTILIZAR
 const app = express();
-const port = 8080;
+const port = process.env.PORT;
 
 // MIDLEWARE PARA MANEJAR MATERIAL ESTATICO
 app.use(express.static("./src/public"));
@@ -56,41 +64,50 @@ const hbs = exphbs.create({
     },
   },
 });
-//app.engine("handlebars", exphbs.engine());
+app.engine("handlebars", exphbs.engine());
 app.engine("handlebars", hbs.engine);
 app.set("view engine", "handlebars");
 app.set("views", "./src/views");
 
 // COLOCAR AL SERVIDOR A ESCUCHAR EN EL PUERTO DEFINIDO
 const httpServer = app.listen(port, () => {
-  console.log(`El servidor esta atento al puerto ${port}`);
+  console.log(`The server is listening to port ${port}`);
 });
 
 // SERVIDOR SOCKET IO
-const productManager = new ProductManager("./src/models/products.json");
 const io = new Server(httpServer);
 io.on("connection", async (socket) => {
   // FUNCION PARA CARGAR LOS PRODUCTOS EN CLIENTE
   const productsLoad = async () => {
-    const products = await productManager.getProducts();
+    const products = (await productManager.getProducts())?.data?.docs || [];
     socket.emit("products", products);
   };
 
-  productsLoad();
+  const cartsLoad = async () => {
+    const carts = (await cartManager.getCarts())?.data?.docs || [];
+    socket.emit("carts", carts);
+  };
 
-  // CARGAR PRODUCTOS DESDE CLIENTE
+  productsLoad();
+  cartsLoad();
+
+  // EVENTOS DE PRODUCTOS
   socket.on("productsLoad", async () => {
     productsLoad();
   });
-
-  // ELIMINAR PRODUCTO DESDE CLIENTE
   socket.on("productDelete", async (id) => {
     await productManager.deleteProduct(id);
   });
-
-  // CREAR PRODUCTO DESDE CLIENTE
   socket.on("productCreate", async (productData, callback) => {
     const res = await productManager.addProduct(productData);
     callback({ ...res });
+  });
+  // EVENTOS DE CARRITOS
+  socket.on("cartsLoad", async () => {
+    cartsLoad();
+  });
+  socket.on("cartDelete", async (id) => {
+    console.log("Eliminando", id);
+    await cartManager.deleteCart(id);
   });
 });

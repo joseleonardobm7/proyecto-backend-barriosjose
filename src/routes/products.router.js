@@ -1,35 +1,13 @@
 import express from "express";
-import ProductManager from "../controllers/product-manager.js";
-
+import ProductManager from "../dao/db/products-manager-db.js";
 const router = express.Router();
-const productManager = new ProductManager("./src/models/products.json");
+const productManager = new ProductManager();
 
-// FUNCION PARA OBTENER TODOS LOS PRODUCTOS
-// OPCIONALMENTE PUEDE USAR LOS QUERY PARAMS LIMIT Y PAGE PARA PAGINAR LA BUSQUEDA
+// OBTENER PRODUCTOS PAGINANDO
 const getProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page || 1);
-    const limit = parseInt(req.query.limit || 0);
-    const start = page === 1 ? 0 : limit * (page - 1);
-    const allProducts = await productManager.getProducts();
-    const limitProducts = allProducts.slice(start, start + limit);
-    const responseProducts = limit ? limitProducts : allProducts;
-    if (responseProducts.length) {
-      if (limit)
-        console.log(
-          `Listando los productos ${start + 1}-${Math.min(
-            start + limit,
-            allProducts.length
-          )}/${allProducts.length}`
-        );
-      else console.log(`Listando ${responseProducts.length} Productos`);
-      res.json(responseProducts);
-    } else {
-      console.log("No se encontro ningun producto registrado");
-      res.json({
-        message: "No se encontró ningún producto",
-      });
-    }
+    const response = await productManager.getProducts({ reqQuery: req.query });
+    res.json(response);
   } catch (e) {
     console.error("No se pudieron obtener los productos:", e);
     res.status(500).json({

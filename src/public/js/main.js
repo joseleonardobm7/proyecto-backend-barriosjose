@@ -63,7 +63,7 @@ const renderProducts = (data) => {
 // ELIMINAR PRODUCTO
 const productDelete = (id) => {
   socket.emit("productDelete", id);
-  socket.emit("productsLoad", productData);
+  socket.emit("productsLoad", {});
 };
 
 // CREAR PRODUCTO
@@ -98,7 +98,6 @@ const productCreate = async () => {
       count: 0,
     },
   };
-  console.log(productData);
   // CREAR PRODUCTO
   socket.emit("productCreate", productData, (res) => {
     const { error } = res;
@@ -115,9 +114,111 @@ const productCreate = async () => {
       form.reset();
 
       // RECARGAR PRODUCTOS
-      socket.emit("productsLoad", productData);
+      socket.emit("productsLoad", {});
     }
   });
+};
+
+// RENDERIZAR CARRITOS
+socket.on("carts", (data) => {
+  renderCarts(data);
+});
+const renderCarts = (data) => {
+  const cartsContainer = document.getElementById("cartsContainer");
+  cartsContainer.innerHTML = "";
+  data.forEach((d) => {
+    const card = document.createElement("div");
+    card.classList.add("col");
+    const defaultImg =
+      "https://via.placeholder.com/300x200.png?text=Carrito+sin+imagen";
+    let totalCart = 0;
+    card.innerHTML = `
+      <div class="card-cart">
+        <div class="text-center mx-auto" style="width: 300px; height: 200px;">
+          <div class="d-flex justify-content-center align-items-center w-100 h-100">
+            <img 
+              src="${defaultImg}"
+              class="img-fluid" 
+              style="max-width: 100%; max-height: 100%;" 
+              alt="${d.title}" 
+              onerror="this.src='https://via.placeholder.com/300x200.png?text=Carrito+sin+imagen'"
+            >
+          </div>
+        </div>
+        <div class="card-body w-100">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="fw-bold me-2"> Usuario </span>
+              <span>${d.userId || ""}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="fw-bold me-2"> Monto </span>
+              <span>$${totalCart || 0}</span>
+            </li>
+            <li class="list-group-item d-flex flex-column justify-content-between">
+              <div> <span class="fw-bold me-2"> Productos </span></div>
+              <ul class="product-list" ></ul>
+            </li>
+          </ul>
+        </div>
+        <div class="w-100">
+          <button class="btn btn-danger btn-sm w-100 btn-delete-cart">Eliminar</button>
+        </div>
+      </div>
+    `;
+    cartsContainer.appendChild(card);
+
+    // AGREGAR LA LISTA DE PRODUCTOS
+    const productListContainer = card.querySelector(".product-list");
+
+    const productList = d.products;
+    const noProducts = document.createElement("span");
+    noProducts.innerHTML = "Sin productos registrados";
+    if (!productList.length) {
+      productListContainer.appendChild(noProducts);
+    } else {
+      productList.forEach((p) => {
+        const { product, quantity } = p;
+        const { sku, price, _id } = product;
+        totalCart += price * quantity || 0;
+        // CREANDO LI
+        const productLine = document.createElement("li");
+        productLine.classList.add(
+          "d-flex",
+          "justify-content-start",
+          "align-items-center"
+        );
+        // LLENANDO LI
+        productLine.innerHTML = `
+          <button class="btn btn-danger btn-sm btn-icon-small btn-delete-product-cart-${_id}">
+            <i class="bi bi-trash"></i>
+          </button>
+          <div class="ps-3">
+            SKU: ${sku} - [${quantity} x $${price}] -> $ ${quantity * price}
+          </div>
+        `;
+        productListContainer.appendChild(productLine);
+
+        // AGREGANDO FUNCIONALIDAD AL BOTÓN ELIMINAR PRODUCTO DE CARRITO
+        card
+          .querySelector(`.btn-delete-product-cart-${_id}`)
+          .addEventListener("click", () => {
+            console.log(_id);
+          });
+      });
+    }
+
+    // AGREGANDO FUNCIONALIDAD AL BOTÓN ELIMINAR CARRITO
+    card.querySelector(".btn-delete-cart").addEventListener("click", () => {
+      cartDelete(d._id);
+    });
+  });
+};
+
+// ELIMINAR PRODUCTO
+const cartDelete = (id) => {
+  socket.emit("cartDelete", id);
+  socket.emit("cartsLoad", {});
 };
 
 // INICIALIZAR TOOLTIPS DE BOOSTRAP
